@@ -112,7 +112,7 @@ ensure_subscription_file() {
 
 subscription_lookup() {
 	local name="$1"
-	awk -F'|' -v target="$name" '$1 == target {print; exit}' "$SUBSCRIPTION_FILE"
+	awk -F'|' -v target="$name" '$1 == target {found=1; print; exit} END {exit !found}' "$SUBSCRIPTION_FILE"
 }
 
 subscription_add() {
