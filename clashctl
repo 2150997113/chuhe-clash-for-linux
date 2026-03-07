@@ -62,8 +62,8 @@ Commands:
   restart               Restart Clash service
   status                Show Clash service status
   update                Refresh subscription config
-  set-url <url>          Update CLASH_URL in .env
-  sub add <name> <url> [headers]   Add subscription entry
+  set-url <url>         Update CLASH_URL in .env
+  sub add <name> <url> [headers]   Add subscription (url or local:/path/to/config.yaml)
   sub del <name>                   Delete subscription entry
   sub use <name>                   Activate subscription entry
   sub update [name]                Update subscription config by entry
@@ -123,6 +123,15 @@ subscription_add() {
 		echo "[ERROR] 用法: clashctl sub add <name> <url> [headers]" >&2
 		exit 1
 	fi
+	# 支持本地文件: local:/path/to/config.yaml
+	if [[ "$url" == local:* ]]; then
+		local filepath="${url#local:}"
+		if [ ! -f "$filepath" ]; then
+			echo "[ERROR] 本地配置文件不存在: $filepath" >&2
+			exit 1
+		fi
+		headers="local"
+	fi
 	ensure_subscription_file
 	if subscription_lookup "$name" >/dev/null; then
 		echo "[ERROR] 订阅已存在: $name" >&2
@@ -164,10 +173,32 @@ subscription_use() {
 	local url headers
 	url=$(echo "$line" | awk -F'|' '{print $2}')
 	headers=$(echo "$line" | awk -F'|' '{print $3}')
-	set_env_var "CLASH_URL" "$url"
-	set_env_var "CLASH_HEADERS" "$headers"
-	set_env_var "CLASH_SUBSCRIPTION" "$name"
-	echo "[OK] 已切换订阅: $name"
+
+	# 支持本地文件
+	if [[ "$url" == local:* ]]; then
+		local filepath="${url#local:}"
+		local config_file="$CLASH_HOME/conf/config.yaml"
+		# 跳过相同文件
+		if [ "$(realpath "$filepath" 2>/dev/null)" != "$(realpath "$config_file" 2>/dev/null)" ]; then
+			cp "$filepath" "$config_file"
+		fi
+		set_env_var "CLASH_URL" ""
+		set_env_var "CLASH_HEADERS" ""
+		set_env_var "CLASH_SUBSCRIPTION" "$name"
+		echo "[OK] 已切换订阅: $name (本地文件)"
+	else
+		set_env_var "CLASH_URL" "$url"
+		set_env_var "CLASH_HEADERS" "$headers"
+		set_env_var "CLASH_SUBSCRIPTION" "$name"
+		echo "[OK] 已切换订阅: $name"
+	fi
+
+	# 自动重启服务
+	if use_systemd; then
+		systemctl restart "${SERVICE_NAME}.service" && echo "[OK] 服务已重启"
+	else
+		run_script "scripts/cmd/service-restart.sh"
+	fi
 }
 
 subscription_touch() {
@@ -187,23 +218,47 @@ subscription_update() {
 		echo "[ERROR] 未指定订阅名称，且 CLASH_SUBSCRIPTION 未设置" >&2
 		exit 1
 	fi
-	subscription_use "$name"
-	run_script "scripts/cmd/subscription-update.sh"
-	subscription_touch "$name"
-	echo "[OK] 订阅已更新: $name"
+
+	# 检查是否是本地订阅
+	ensure_subscription_file
+	local line url
+	line=$(subscription_lookup "$name")
+	if [ -z "$line" ]; then
+		echo "[ERROR] 未找到订阅: $name" >&2
+		exit 1
+	fi
+	url=$(echo "$line" | awk -F'|' '{print $2}')
+
+	if [[ "$url" == local:* ]]; then
+		# 本地订阅：直接复制文件
+		subscription_use "$name"
+		subscription_touch "$name"
+		echo "[OK] 订阅已更新: $name (本地文件)"
+	else
+		# 远程订阅：下载更新
+		subscription_use "$name"
+		run_script "scripts/cmd/subscription-update.sh"
+		subscription_touch "$name"
+		echo "[OK] 订阅已更新: $name"
+	fi
 }
 
 subscription_list() {
 	ensure_subscription_file
-	local active
+	local active sub_type
 	active=$(awk -F= '/^export CLASH_SUBSCRIPTION=/{print $2}' "$ENV_FILE" | tr -d "'" | tr -d '"')
-	printf "%-20s %-6s %s\n" "NAME" "ACTIVE" "URL"
+	printf "%-15s %-6s %-6s %s\n" "NAME" "ACTIVE" "TYPE" "URL"
 	while IFS='|' read -r name url headers updated; do
 		[ -z "$name" ] && continue
-		if [ "$name" = "$active" ]; then
-			printf "%-20s %-6s %s\n" "$name" "yes" "$url"
+		if [[ "$url" == local:* ]]; then
+			sub_type="local"
 		else
-			printf "%-20s %-6s %s\n" "$name" "no" "$url"
+			sub_type="remote"
+		fi
+		if [ "$name" = "$active" ]; then
+			printf "%-15s %-6s %-6s %s\n" "$name" "yes" "$sub_type" "$url"
+		else
+			printf "%-15s %-6s %-6s %s\n" "$name" "no" "$sub_type" "$url"
 		fi
 	done < "$SUBSCRIPTION_FILE"
 }

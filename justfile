@@ -76,6 +76,10 @@ down:
 
 # ==================== 订阅管理 ====================
 
+# 列出订阅
+list:
+    ./clashctl sub list
+
 # 切换订阅
 use name:
     ./clashctl sub use {{name}}
@@ -84,6 +88,6 @@ use name:
 del name:
     ./clashctl sub del {{name}}
 
-# 添加订阅
+# 添加订阅 (url 或 local:/path/to/config.yaml)
 add name url:
     ./clashctl sub add {{name}} {{url}}
