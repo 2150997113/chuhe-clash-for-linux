@@ -69,7 +69,7 @@ proxy_status() {
 
 # 简化别名（带连字符）
 alias proxy-on='source /etc/profile.d/clash-for-linux.sh && proxy_on'
-alias proxy-off='source /etc/profile.d/clash-for-linux.sh && proxy_off'
+alias proxy-down='source /etc/profile.d/clash-for-linux.sh && proxy_off'
 EOF
 
   chmod 644 "$profiled_file"

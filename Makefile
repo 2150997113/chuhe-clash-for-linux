@@ -43,7 +43,7 @@ env:
 	@echo "请在当前 shell 执行以下命令使别名生效:"
 	@echo "  source /etc/profile.d/clash-for-linux.sh"
 	@echo ""
-	@echo "可用命令: proxy-on / proxy-off / proxy_on / proxy_off"
+	@echo "可用命令: proxy-on / proxy-down / proxy_on / proxy_off"
 
 # ==================== 订阅管理 ====================
 
