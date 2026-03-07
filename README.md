@@ -65,8 +65,6 @@ sudo make install
 - 检测并规避端口冲突
 - 安装 `clashctl` 到 `/usr/local/bin`
 
-### [进阶安装与高级用法](docs/install.md)
-
 ### [架构设计文档](docs/architecture.md)
 
 ### [多订阅管理设计](docs/subscription-management.md)
@@ -76,6 +74,8 @@ sudo make install
 ### [Dashboard 状态获取机制](docs/dashboard-state-mechanism.md)
 
 ### [Dashboard 部署方式](docs/dashboard-deployment.md)
+
+### [故障排查指南](docs/troubleshooting.md)
 
 ------
 
