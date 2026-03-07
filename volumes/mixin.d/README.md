@@ -5,5 +5,5 @@
 如需手动指定顺序或使用自定义路径，请在 `.env` 中设置：
 
 ```bash
-export CLASH_MIXIN_PATHS='conf/mixin.d/base.yaml,conf/mixin.d/rules.yaml'
+export CLASH_MIXIN_PATHS='volumes/mixin.d/base.yaml,volumes/mixin.d/rules.yaml'
 ```

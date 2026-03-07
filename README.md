@@ -222,12 +222,12 @@ clashctl sub update personal
 
 用于追加或覆盖 Clash 配置。
 
-- 默认读取：`conf/mixin.d/*.yaml`（按文件名排序）
+- 默认读取：`volumes/mixin.d/*.yaml`（按文件名排序）
 - 也可在 `.env` 中指定：
 
 ```
-export CLASH_MIXIN_DIR='conf/mixin.d'
-export CLASH_MIXIN_PATHS='conf/mixin.d/base.yaml,conf/mixin.d/rules.yaml'
+export CLASH_MIXIN_DIR='volumes/mixin.d'
+export CLASH_MIXIN_PATHS='volumes/mixin.d/base.yaml,volumes/mixin.d/rules.yaml'
 ```
 
 ------

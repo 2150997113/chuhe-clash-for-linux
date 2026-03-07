@@ -56,13 +56,29 @@ source "$SERVER_DIR/scripts/lib/port-check.sh"
 CONF_DIR="$SERVER_DIR/conf"
 TEMP_DIR="$SERVER_DIR/temp"
 LOG_DIR="$SERVER_DIR/logs"
+VOLUMES_DIR="$SERVER_DIR/volumes"
 
-mkdir -p "$CONF_DIR" "$TEMP_DIR" "$LOG_DIR" || {
+mkdir -p "$CONF_DIR" "$TEMP_DIR" "$LOG_DIR" "$VOLUMES_DIR/geoip" "$VOLUMES_DIR/mixin.d" || {
   err "cannot create dirs"
   exit 2
 }
 
 PID_FILE="${CLASH_PID_FILE:-$TEMP_DIR/clash.pid}"
+
+# =========================
+# 确保 volumes 文件链接
+# =========================
+ensure_volumes_links() {
+  # Country.mmdb -> volumes/geoip/Country.mmdb
+  if [ -f "$VOLUMES_DIR/geoip/Country.mmdb" ]; then
+    ln -sf "../volumes/geoip/Country.mmdb" "$CONF_DIR/Country.mmdb"
+  fi
+  # mixin.d -> volumes/mixin.d
+  if [ -d "$VOLUMES_DIR/mixin.d" ]; then
+    ln -sfn "../volumes/mixin.d" "$CONF_DIR/mixin.d"
+  fi
+}
+ensure_volumes_links
 
 # =========================
 # 函数定义

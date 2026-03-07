@@ -147,7 +147,7 @@ apply_tun_config() {
 apply_mixin_config() {
   local config_path="$1"
   local base_dir="${2:-${SERVER_DIR}}"
-  local mixin_dir="${CLASH_MIXIN_DIR:-$base_dir/conf/mixin.d}"
+  local mixin_dir="${CLASH_MIXIN_DIR:-$base_dir/volumes/mixin.d}"
   local mixin_paths=()
 
   [ -n "${CLASH_MIXIN_PATHS:-}" ] && IFS=',' read -r -a mixin_paths <<< "$CLASH_MIXIN_PATHS"
