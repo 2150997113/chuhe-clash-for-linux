@@ -5,7 +5,7 @@
 set -euo pipefail
 
 # 获取项目根目录
-Server_Dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+SERVER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 # =========================
 # 加载 .env
@@ -16,8 +16,8 @@ ENV_FILE=""
 if [ -n "${CLASH_ENV:-}" ] && [ -f "$CLASH_ENV" ]; then
   ENV_FILE="$CLASH_ENV"
 # 2) 脚本所在目录
-elif [ -f "$Server_Dir/.env" ]; then
-  ENV_FILE="$Server_Dir/.env"
+elif [ -f "$SERVER_DIR/.env" ]; then
+  ENV_FILE="$SERVER_DIR/.env"
 # 3) 标准安装目录
 elif [ -f "/opt/clash-for-linux/.env" ]; then
   ENV_FILE="/opt/clash-for-linux/.env"
@@ -35,32 +35,32 @@ source "$ENV_FILE"
 # 加载公共库
 # =========================
 # shellcheck disable=SC1090
-source "$Server_Dir/scripts/lib/output.sh"
+source "$SERVER_DIR/scripts/lib/output.sh"
 output_init
 
 # shellcheck disable=SC1090
-source "$Server_Dir/scripts/lib/config-check.sh"
+source "$SERVER_DIR/scripts/lib/config-check.sh"
 
 # shellcheck disable=SC1090
-source "$Server_Dir/scripts/lib/port-check.sh"
+source "$SERVER_DIR/scripts/lib/port-check.sh"
 
 # =========================
 # 变量设置
 # =========================
-Conf_Dir="$Server_Dir/conf"
-Temp_Dir="$Server_Dir/temp"
-Log_Dir="$Server_Dir/logs"
+CONF_DIR="$SERVER_DIR/conf"
+TEMP_DIR="$SERVER_DIR/temp"
+LOG_DIR="$SERVER_DIR/logs"
 
-mkdir -p "$Conf_Dir" "$Temp_Dir" "$Log_Dir"
+mkdir -p "$CONF_DIR" "$TEMP_DIR" "$LOG_DIR"
 
 URL="${CLASH_URL:?Error: CLASH_URL variable is not set or empty}"
 
-# Secret 处理
-Secret="${CLASH_SECRET:-}"
-[ -z "$Secret" ] && [ -f "$Conf_Dir/config.yaml" ] && \
-  Secret="$(awk -F': ' '/^secret:/{print $2; exit}' "$Conf_Dir/config.yaml" 2>/dev/null || true)"
-[ -z "$Secret" ] && Secret="$(openssl rand -hex 32 2>/dev/null || head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n')"
-export Secret
+# SECRET 处理
+SECRET="${CLASH_SECRET:-}"
+[ -z "$SECRET" ] && [ -f "$CONF_DIR/config.yaml" ] && \
+  SECRET="$(awk -F': ' '/^secret:/{print $2; exit}' "$CONF_DIR/config.yaml" 2>/dev/null || true)"
+[ -z "$SECRET" ] && SECRET="$(openssl rand -hex 32 2>/dev/null || head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n')"
+export SECRET
 
 # 端口默认值
 CLASH_HTTP_PORT="${CLASH_HTTP_PORT:-7890}"
@@ -143,84 +143,84 @@ ok "Clash订阅地址可访问！"
 # 下载配置
 info "下载配置文件..."
 
-if ! download_config "$URL" "$Temp_Dir/clash.yaml"; then
+if ! download_config "$URL" "$TEMP_DIR/clash.yaml"; then
   err "配置文件下载失败！"
   exit 1
 fi
 ok "配置文件下载成功！"
 
 # 校验配置内容
-if ! grep -Eq '^(proxies:|proxy-groups:|rules:|mixed-port:|port:)' "$Temp_Dir/clash.yaml"; then
+if ! grep -Eq '^(proxies:|proxy-groups:|rules:|mixed-port:|port:)' "$TEMP_DIR/clash.yaml"; then
   err "下载内容不像 Clash 配置（缺少关键字段）"
-  echo "可执行：head -n 20 $Temp_Dir/clash.yaml 查看内容"
+  echo "可执行：head -n 20 $TEMP_DIR/clash.yaml 查看内容"
   exit 1
 fi
 
-cp -a "$Temp_Dir/clash.yaml" "$Temp_Dir/clash_config.yaml"
+cp -a "$TEMP_DIR/clash.yaml" "$TEMP_DIR/clash_config.yaml"
 
 # subconverter
 # shellcheck disable=SC1090
-source "$Server_Dir/scripts/lib/subconverter-resolve.sh"
+source "$SERVER_DIR/scripts/lib/subconverter-resolve.sh"
 
-if [ "${Subconverter_Ready:-false}" = "true" ]; then
+if [ "${SUBCONVERTER_READY:-false}" = "true" ]; then
   info "判断订阅内容是否符合 Clash 配置标准..."
-  export SUBCONVERTER_BIN="$Subconverter_Bin"
-  bash "$Server_Dir/scripts/lib/profile-convert.sh"
+  export SUBCONVERTER_BIN="$SUBCONVERTER_BIN"
+  bash "$SERVER_DIR/scripts/lib/profile-convert.sh"
   sleep 1
 else
   warn "未检测到可用的 subconverter，跳过订阅转换"
 fi
 
 # 生成 config.yaml
-if is_full_clash_config "$Temp_Dir/clash_config.yaml"; then
+if is_full_clash_config "$TEMP_DIR/clash_config.yaml"; then
   info "检测到全量配置模式，直接使用订阅"
-  cp -a "$Temp_Dir/clash_config.yaml" "$Temp_Dir/config.yaml"
+  cp -a "$TEMP_DIR/clash_config.yaml" "$TEMP_DIR/config.yaml"
 else
   info "检测到节点/片段模式，使用模板合并"
-  if [ ! -f "$Temp_Dir/templete_config.yaml" ]; then
-    err "未找到模板文件：$Temp_Dir/templete_config.yaml"
+  if [ ! -f "$TEMP_DIR/templete_config.yaml" ]; then
+    err "未找到模板文件：$TEMP_DIR/templete_config.yaml"
     exit 1
   fi
-  sed -n '/^proxies:/,$p' "$Temp_Dir/clash_config.yaml" > "$Temp_Dir/proxy.txt"
-  cat "$Temp_Dir/templete_config.yaml" > "$Temp_Dir/config.yaml"
-  cat "$Temp_Dir/proxy.txt" >> "$Temp_Dir/config.yaml"
+  sed -n '/^proxies:/,$p' "$TEMP_DIR/clash_config.yaml" > "$TEMP_DIR/proxy.txt"
+  cat "$TEMP_DIR/templete_config.yaml" > "$TEMP_DIR/config.yaml"
+  cat "$TEMP_DIR/proxy.txt" >> "$TEMP_DIR/config.yaml"
 fi
 
 # 替换占位符
-sed -i "s/CLASH_HTTP_PORT_PLACEHOLDER/${CLASH_HTTP_PORT}/g" "$Temp_Dir/config.yaml"
-sed -i "s/CLASH_SOCKS_PORT_PLACEHOLDER/${CLASH_SOCKS_PORT}/g" "$Temp_Dir/config.yaml"
-sed -i "s/CLASH_REDIR_PORT_PLACEHOLDER/${CLASH_REDIR_PORT}/g" "$Temp_Dir/config.yaml"
-sed -i "s/CLASH_LISTEN_IP_PLACEHOLDER/${CLASH_LISTEN_IP}/g" "$Temp_Dir/config.yaml"
-sed -i "s/CLASH_ALLOW_LAN_PLACEHOLDER/${CLASH_ALLOW_LAN}/g" "$Temp_Dir/config.yaml"
+sed -i "s/CLASH_HTTP_PORT_PLACEHOLDER/${CLASH_HTTP_PORT}/g" "$TEMP_DIR/config.yaml"
+sed -i "s/CLASH_SOCKS_PORT_PLACEHOLDER/${CLASH_SOCKS_PORT}/g" "$TEMP_DIR/config.yaml"
+sed -i "s/CLASH_REDIR_PORT_PLACEHOLDER/${CLASH_REDIR_PORT}/g" "$TEMP_DIR/config.yaml"
+sed -i "s/CLASH_LISTEN_IP_PLACEHOLDER/${CLASH_LISTEN_IP}/g" "$TEMP_DIR/config.yaml"
+sed -i "s/CLASH_ALLOW_LAN_PLACEHOLDER/${CLASH_ALLOW_LAN}/g" "$TEMP_DIR/config.yaml"
 
 # external-controller
 if [ "$EXTERNAL_CONTROLLER_ENABLED" = "true" ]; then
-  upsert_yaml_kv "$Temp_Dir/config.yaml" "external-controller" "$EXTERNAL_CONTROLLER"
+  upsert_yaml_kv "$TEMP_DIR/config.yaml" "external-controller" "$EXTERNAL_CONTROLLER"
 else
-  sed -i "s@^external-controller:.*@# external-controller: disabled@g" "$Temp_Dir/config.yaml" 2>/dev/null || true
+  sed -i "s@^external-controller:.*@# external-controller: disabled@g" "$TEMP_DIR/config.yaml" 2>/dev/null || true
 fi
 
 # 应用 TUN 和 Mixin 配置
-apply_tun_config "$Temp_Dir/config.yaml"
-apply_mixin_config "$Temp_Dir/config.yaml" "$Server_Dir"
+apply_tun_config "$TEMP_DIR/config.yaml"
+apply_mixin_config "$TEMP_DIR/config.yaml" "$SERVER_DIR"
 
 # 检查配置非空
-if [ ! -s "$Temp_Dir/config.yaml" ]; then
+if [ ! -s "$TEMP_DIR/config.yaml" ]; then
   err "生成的配置为空，中止写入以保护现有配置"
   exit 1
 fi
 
 # 写入最终配置
-cp "$Temp_Dir/config.yaml" "$Conf_Dir/config.yaml"
+cp "$TEMP_DIR/config.yaml" "$CONF_DIR/config.yaml"
 
 # Dashboard
 if [ "$EXTERNAL_CONTROLLER_ENABLED" = "true" ]; then
-  local dashboard_dir="$Server_Dir/dashboard/public"
-  [ -d "$dashboard_dir" ] && upsert_yaml_kv "$Conf_Dir/config.yaml" "external-ui" "$dashboard_dir"
+  local dashboard_dir="$SERVER_DIR/dashboard/public"
+  [ -d "$dashboard_dir" ] && upsert_yaml_kv "$CONF_DIR/config.yaml" "external-ui" "$dashboard_dir"
 fi
 
 # 写入 secret
-force_write_secret "$Conf_Dir/config.yaml"
+force_write_secret "$CONF_DIR/config.yaml"
 
 ok "订阅更新完成"
 echo ""

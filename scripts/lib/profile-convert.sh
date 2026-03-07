@@ -15,13 +15,13 @@ set -euo pipefail
 # - 已是完整 Clash 配置则直接 copy
 # - 没有 CLASH_URL（原始订阅 URL）则不转换（subconverter 最稳是 url=...）
 
-Server_Dir="${Server_Dir:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
-Temp_Dir="${Temp_Dir:-$Server_Dir/temp}"
+SERVER_DIR="${SERVER_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+TEMP_DIR="${TEMP_DIR:-$SERVER_DIR/temp}"
 
-mkdir -p "$Temp_Dir"
+mkdir -p "$TEMP_DIR"
 
-IN_FILE="${IN_FILE:-$Temp_Dir/clash.yaml}"
-OUT_FILE="${OUT_FILE:-$Temp_Dir/clash_config.yaml}"
+IN_FILE="${IN_FILE:-$TEMP_DIR/clash.yaml}"
+OUT_FILE="${OUT_FILE:-$TEMP_DIR/clash_config.yaml}"
 
 # "更先进"的默认：Clash Meta / Mihomo
 SUB_TARGET="${SUB_TARGET:-clashmeta}"   # 推荐 clashmeta（兼容面最广）

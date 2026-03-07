@@ -13,13 +13,13 @@ trap 'rc=$?; echo "[ERR] rc=$rc line=$LINENO cmd=$BASH_COMMAND" >&2' ERR
 # =========================
 # 初始化
 # =========================
-export Server_Dir
-Server_Dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+export SERVER_DIR
+SERVER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 # 加载 .env
-if [ -f "$Server_Dir/.env" ]; then
+if [ -f "$SERVER_DIR/.env" ]; then
   set +u
-  source "$Server_Dir/.env" || echo "[WARN] failed to source .env" >&2
+  source "$SERVER_DIR/.env" || echo "[WARN] failed to source .env" >&2
   set -u
 fi
 
@@ -35,34 +35,34 @@ fi
 # 加载公共库
 # =========================
 # shellcheck disable=SC1090
-source "$Server_Dir/scripts/lib/output.sh"
+source "$SERVER_DIR/scripts/lib/output.sh"
 output_init
 
 # shellcheck disable=SC1090
-source "$Server_Dir/scripts/lib/config-check.sh"
+source "$SERVER_DIR/scripts/lib/config-check.sh"
 
 # shellcheck disable=SC1090
-source "$Server_Dir/scripts/lib/cpu-arch.sh"
+source "$SERVER_DIR/scripts/lib/cpu-arch.sh"
 
 # shellcheck disable=SC1090
-source "$Server_Dir/scripts/lib/clash-resolve.sh"
+source "$SERVER_DIR/scripts/lib/clash-resolve.sh"
 
 # shellcheck disable=SC1090
-source "$Server_Dir/scripts/lib/port-check.sh"
+source "$SERVER_DIR/scripts/lib/port-check.sh"
 
 # =========================
 # 变量设置
 # =========================
-Conf_Dir="$Server_Dir/conf"
-Temp_Dir="$Server_Dir/temp"
-Log_Dir="$Server_Dir/logs"
+CONF_DIR="$SERVER_DIR/conf"
+TEMP_DIR="$SERVER_DIR/temp"
+LOG_DIR="$SERVER_DIR/logs"
 
-mkdir -p "$Conf_Dir" "$Temp_Dir" "$Log_Dir" || {
+mkdir -p "$CONF_DIR" "$TEMP_DIR" "$LOG_DIR" || {
   err "cannot create dirs"
   exit 2
 }
 
-PID_FILE="${CLASH_PID_FILE:-$Temp_Dir/clash.pid}"
+PID_FILE="${CLASH_PID_FILE:-$TEMP_DIR/clash.pid}"
 
 # =========================
 # 函数定义
@@ -78,24 +78,24 @@ is_running() {
 }
 
 ensure_fallback_config() {
-  if [ ! -s "$Conf_Dir/config.yaml" ]; then
-    if [ -s "$Server_Dir/conf/fallback_config.yaml" ]; then
-      cp -f "$Server_Dir/conf/fallback_config.yaml" "$Conf_Dir/config.yaml"
+  if [ ! -s "$CONF_DIR/config.yaml" ]; then
+    if [ -s "$SERVER_DIR/conf/fallback_config.yaml" ]; then
+      cp -f "$SERVER_DIR/conf/fallback_config.yaml" "$CONF_DIR/config.yaml"
       warn "已复制 fallback_config.yaml -> conf/config.yaml（兜底）"
     else
       err "未找到可用的 conf/fallback_config.yaml，无法兜底启动"
       [ "${SYSTEMD_MODE:-false}" = "true" ] && return 1 || exit 1
     fi
   fi
-  force_write_secret "$Conf_Dir/config.yaml" || {
-    err "写入 secret 失败：$Conf_Dir/config.yaml"
+  force_write_secret "$CONF_DIR/config.yaml" || {
+    err "写入 secret 失败：$CONF_DIR/config.yaml"
     [ "${SYSTEMD_MODE:-false}" = "true" ] && return 1 || exit 1
   }
   return 0
 }
 
 ensure_subconverter() {
-  local bin="${Server_Dir}/libs/subconverter/subconverter"
+  local bin="${SERVER_DIR}/libs/subconverter/subconverter"
   local port="25500"
 
   [ ! -x "$bin" ] && { export SUBCONVERTER_READY="false"; return 0; }
@@ -109,7 +109,7 @@ ensure_subconverter() {
 
   # 启动
   info "starting subconverter..."
-  (cd "${Server_Dir}/libs/subconverter" && nohup "./subconverter" >/dev/null 2>&1 &)
+  (cd "${SERVER_DIR}/libs/subconverter" && nohup "./subconverter" >/dev/null 2>&1 &)
 
   for _ in 1 2 3 4 5; do
     sleep 1
@@ -160,10 +160,10 @@ download_subscription() {
 # =========================
 # 权限检查
 # =========================
-chmod +x "$Server_Dir/libs/clash/"* 2>/dev/null || true
-chmod +x "$Server_Dir/scripts/cmd/"* 2>/dev/null || true
-chmod +x "$Server_Dir/scripts/lib/"* 2>/dev/null || true
-[ -f "$Server_Dir/libs/subconverter/subconverter" ] && chmod +x "$Server_Dir/libs/subconverter/subconverter" 2>/dev/null || true
+chmod +x "$SERVER_DIR/libs/clash/"* 2>/dev/null || true
+chmod +x "$SERVER_DIR/scripts/cmd/"* 2>/dev/null || true
+chmod +x "$SERVER_DIR/scripts/lib/"* 2>/dev/null || true
+[ -f "$SERVER_DIR/libs/subconverter/subconverter" ] && chmod +x "$SERVER_DIR/libs/subconverter/subconverter" 2>/dev/null || true
 
 # 检查是否已在运行
 if is_running; then
@@ -188,15 +188,15 @@ fi
   exit 2
 }
 
-# Secret 处理
-Secret="${CLASH_SECRET:-}"
-[ -z "$Secret" ] && [ -f "$Conf_Dir/config.yaml" ] && \
-  Secret="$(awk -F': *' '/^[[:space:]]*secret[[:space:]]*:/{print $2; exit}' "$Conf_Dir/config.yaml" 2>/dev/null | tr -d '"' || true)"
-[[ "$Secret" =~ ^\$\{.*\}$ ]] && Secret=""
-if [ -z "$Secret" ]; then
-  Secret="$(openssl rand -hex 32 2>/dev/null || head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n')"
+# SECRET 处理
+SECRET="${CLASH_SECRET:-}"
+[ -z "$SECRET" ] && [ -f "$CONF_DIR/config.yaml" ] && \
+  SECRET="$(awk -F': *' '/^[[:space:]]*secret[[:space:]]*:/{print $2; exit}' "$CONF_DIR/config.yaml" 2>/dev/null | tr -d '"' || true)"
+[[ "$SECRET" =~ ^\$\{.*\}$ ]] && SECRET=""
+if [ -z "$SECRET" ]; then
+  SECRET="$(openssl rand -hex 32 2>/dev/null || head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n')"
 fi
-export Secret
+export SECRET
 
 # 端口默认值
 CLASH_HTTP_PORT="${CLASH_HTTP_PORT:-7890}"
@@ -213,8 +213,8 @@ CLASH_REDIR_PORT="$(resolve_port_value "REDIR" "$CLASH_REDIR_PORT")"
 EXTERNAL_CONTROLLER="$(resolve_host_port "External Controller" "$EXTERNAL_CONTROLLER" "127.0.0.1")"
 
 # CPU 架构
-[ -z "${CpuArch:-}" ] && get_cpu_arch
-[ -z "${CpuArch:-}" ] && { err "无法识别 CPU 架构"; exit 2; }
+[ -z "${CPU_ARCH:-}" ] && get_cpu_arch
+[ -z "${CPU_ARCH:-}" ] && { err "无法识别 CPU 架构"; exit 2; }
 
 # 临时取消代理
 unset http_proxy https_proxy no_proxy HTTP_PROXY HTTPS_PROXY NO_PROXY || true
@@ -266,43 +266,43 @@ if [ "$SKIP_CONFIG_REBUILD" != "true" ]; then
   ensure_subconverter || true
   info "下载配置文件..."
 
-  if download_subscription "$URL" "$Temp_Dir/clash.yaml"; then
+  if download_subscription "$URL" "$TEMP_DIR/clash.yaml"; then
     ok "配置文件下载成功"
 
     # 检查是否是完整 Clash 配置
-    if is_full_clash_config "$Temp_Dir/clash.yaml"; then
+    if is_full_clash_config "$TEMP_DIR/clash.yaml"; then
       info "订阅已是完整 Clash 配置"
-      cp -f "$Temp_Dir/clash.yaml" "$Conf_Dir/config.yaml"
+      cp -f "$TEMP_DIR/clash.yaml" "$CONF_DIR/config.yaml"
 
       # 写入 controller/ui/secret
-      force_write_controller_and_ui "$Conf_Dir/config.yaml" || true
-      force_write_secret "$Conf_Dir/config.yaml" || true
+      force_write_controller_and_ui "$CONF_DIR/config.yaml" || true
+      force_write_secret "$CONF_DIR/config.yaml" || true
 
       # 创建 UI 软链
-      [ -d "$Server_Dir/dashboard/public" ] && ln -sfn "$Server_Dir/dashboard/public" "$Conf_Dir/ui" 2>/dev/null || true
+      [ -d "$SERVER_DIR/dashboard/public" ] && ln -sfn "$SERVER_DIR/dashboard/public" "$CONF_DIR/ui" 2>/dev/null || true
 
       SKIP_CONFIG_REBUILD=true
     else
       # 需要转换
       info "非完整配置，尝试转换..."
-      export IN_FILE="$Temp_Dir/clash.yaml"
-      export OUT_FILE="$Temp_Dir/clash_converted.yaml"
+      export IN_FILE="$TEMP_DIR/clash.yaml"
+      export OUT_FILE="$TEMP_DIR/clash_converted.yaml"
 
       set +e
-      bash "$Server_Dir/scripts/lib/profile-convert.sh"
+      bash "$SERVER_DIR/scripts/lib/profile-convert.sh"
       local conv_rc=$?
       set -e
 
       if [ $conv_rc -eq 0 ] && [ -s "$OUT_FILE" ]; then
-        cp -f "$OUT_FILE" "$Conf_Dir/config.yaml"
+        cp -f "$OUT_FILE" "$CONF_DIR/config.yaml"
         ok "配置转换成功"
       else
         warn "配置转换失败，使用原始内容"
-        cp -f "$Temp_Dir/clash.yaml" "$Conf_Dir/config.yaml"
+        cp -f "$TEMP_DIR/clash.yaml" "$CONF_DIR/config.yaml"
       fi
 
-      force_write_controller_and_ui "$Conf_Dir/config.yaml" || true
-      force_write_secret "$Conf_Dir/config.yaml" || true
+      force_write_controller_and_ui "$CONF_DIR/config.yaml" || true
+      force_write_secret "$CONF_DIR/config.yaml" || true
     fi
   else
     if [ "$SYSTEMD_MODE" = "true" ]; then
@@ -319,23 +319,23 @@ fi
 # =========================
 # 启动 Clash
 # =========================
-CONFIG_FILE="${CONFIG_FILE:-$Conf_Dir/config.yaml}"
+CONFIG_FILE="${CONFIG_FILE:-$CONF_DIR/config.yaml}"
 
 [ ! -s "$CONFIG_FILE" ] && { err "config 不存在或为空：$CONFIG_FILE"; exit 2; }
 grep -q '\${' "$CONFIG_FILE" && { err "config 包含未解析的占位符"; exit 2; }
 
 info "启动 Clash 服务..."
 
-Clash_Bin="$(resolve_clash_bin "$Server_Dir" "$CpuArch")"
+Clash_Bin="$(resolve_clash_bin "$SERVER_DIR" "$CPU_ARCH")"
 [ $? -ne 0 ] && { err "无法解析 Clash 二进制"; exit 2; }
 
 if [ "${SYSTEMD_MODE:-false}" = "true" ]; then
   info "SYSTEMD_MODE=true，前台启动"
   info "config: $CONFIG_FILE"
-  exec "$Clash_Bin" -f "$CONFIG_FILE" -d "$Conf_Dir"
+  exec "$Clash_Bin" -f "$CONFIG_FILE" -d "$CONF_DIR"
 else
   info "后台启动 (nohup)"
-  nohup "$Clash_Bin" -f "$CONFIG_FILE" -d "$Conf_Dir" >>"$Log_Dir/clash.log" 2>&1 &
+  nohup "$Clash_Bin" -f "$CONFIG_FILE" -d "$CONF_DIR" >>"$LOG_DIR/clash.log" 2>&1 &
   local pid=$!
   echo "$pid" > "$PID_FILE"
   ok "服务启动成功 (PID: $pid)"
@@ -347,8 +347,8 @@ fi
 echo ""
 if [ "${EXTERNAL_CONTROLLER_ENABLED:-true}" = "true" ]; then
   echo "Clash Dashboard: http://${EXTERNAL_CONTROLLER}/ui"
-  local masked="${Secret:0:4}****${Secret: -4}"
-  echo "Secret: ${masked}"
+  local masked="${SECRET:0:4}****${SECRET: -4}"
+  echo "SECRET: ${masked}"
 else
   echo "External Controller 已禁用"
 fi

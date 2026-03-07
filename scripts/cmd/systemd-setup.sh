@@ -4,14 +4,14 @@ set -euo pipefail
 #################### 基本变量 ####################
 
 # 获取项目根目录（从 scripts/cmd/ 向上两级）
-Server_Dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-Service_Name="clash-for-linux"
+SERVER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+SERVICE_NAME="clash-for-linux"
 
-Service_User="root"
-Service_Group="root"
+SERVICE_USER="root"
+SERVICE_GROUP="root"
 
-Unit_Path="/etc/systemd/system/${Service_Name}.service"
-PID_FILE="$Server_Dir/temp/clash.pid"
+Unit_Path="/etc/systemd/system/${SERVICE_NAME}.service"
+PID_FILE="$SERVER_DIR/temp/clash.pid"
 
 #################### 权限检查 ####################
 
@@ -23,9 +23,9 @@ fi
 #################### 目录初始化 ####################
 
 install -d -m 0755 \
-  "$Server_Dir/conf" \
-  "$Server_Dir/logs" \
-  "$Server_Dir/temp"
+  "$SERVER_DIR/conf" \
+  "$SERVER_DIR/logs" \
+  "$SERVER_DIR/temp"
 
 #################### 生成 systemd Unit ####################
 
@@ -37,11 +37,11 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-WorkingDirectory=$Server_Dir
+WorkingDirectory=$SERVER_DIR
 
 # 启动 / 停止
-ExecStart=/bin/bash $Server_Dir/scripts/cmd/service-start.sh
-ExecStop=/bin/bash $Server_Dir/scripts/cmd/service-stop.sh
+ExecStart=/bin/bash $SERVER_DIR/scripts/cmd/service-start.sh
+ExecStop=/bin/bash $SERVER_DIR/scripts/cmd/service-stop.sh
 
 # 失败策略
 Restart=on-failure
@@ -51,8 +51,8 @@ TimeoutStopSec=30
 
 # 环境变量
 Environment=SYSTEMD_MODE=true
-Environment=CLASH_ENV_FILE=$Server_Dir/temp/clash-for-linux.sh
-Environment=CLASH_HOME=$Server_Dir
+Environment=CLASH_ENV_FILE=$SERVER_DIR/temp/clash-for-linux.sh
+Environment=CLASH_HOME=$SERVER_DIR
 
 [Install]
 WantedBy=multi-user.target
@@ -64,4 +64,4 @@ systemctl daemon-reload
 
 echo -e "\033[32m[OK] 已生成 systemd 单元: ${Unit_Path}\033[0m"
 echo -e "可执行以下命令启动服务："
-echo -e "  sudo systemctl enable --now ${Service_Name}.service"
+echo -e "  sudo systemctl enable --now ${SERVICE_NAME}.service"

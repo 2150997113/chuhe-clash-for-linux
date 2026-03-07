@@ -11,10 +11,10 @@ function exitWithError {
 function get_cpu_arch {
     local commands=("$@")
     for cmd in "${commands[@]}"; do
-        local CpuArch
-        CpuArch=$(command -v $cmd >/dev/null && $cmd 2>/dev/null || type -p $cmd 2>/dev/null)
-        if [[ -n "$CpuArch" ]]; then
-            echo "$CpuArch"
+        local CPU_ARCH
+        CPU_ARCH=$(command -v $cmd >/dev/null && $cmd 2>/dev/null || type -p $cmd 2>/dev/null)
+        if [[ -n "$CPU_ARCH" ]]; then
+            echo "$CPU_ARCH"
             return
         fi
     done
@@ -26,25 +26,25 @@ if [[ -f "/etc/os-release" ]]; then
     case "$ID" in
         "ubuntu"|"debian"|"linuxmint")
             # Debian-based distributions
-            CpuArch=$(get_cpu_arch "dpkg-architecture -qDEB_HOST_ARCH_CPU" "dpkg-architecture -qDEB_BUILD_ARCH_CPU" "uname -m")
+            CPU_ARCH=$(get_cpu_arch "dpkg-architecture -qDEB_HOST_ARCH_CPU" "dpkg-architecture -qDEB_BUILD_ARCH_CPU" "uname -m")
             ;;
         "centos"|"fedora"|"rhel")
             # Red Hat-based distributions
-            CpuArch=$(get_cpu_arch "uname -m" "arch" "uname")
+            CPU_ARCH=$(get_cpu_arch "uname -m" "arch" "uname")
             ;;
         *)
             # Unsupported Linux distribution
-            CpuArch=$(get_cpu_arch "uname -m" "arch" "uname")
-            if [[ -z "$CpuArch" ]]; then
+            CPU_ARCH=$(get_cpu_arch "uname -m" "arch" "uname")
+            if [[ -z "$CPU_ARCH" ]]; then
                 exitWithError "Failed to obtain CPU architecture"
             fi
             ;;
     esac
 elif [[ -f "/etc/redhat-release" ]]; then
     # Older Red Hat-based distributions
-    CpuArch=$(get_cpu_arch "uname -m" "arch" "uname")
+    CPU_ARCH=$(get_cpu_arch "uname -m" "arch" "uname")
 else
     exitWithError "Unsupported Linux distribution"
 fi
 
-echo "CPU architecture: $CpuArch"
+echo "CPU architecture: $CPU_ARCH"

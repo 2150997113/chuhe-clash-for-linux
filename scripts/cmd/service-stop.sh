@@ -3,12 +3,12 @@ set -euo pipefail
 
 # 关闭 clash 服务
 # 获取项目根目录（从 scripts/cmd/ 向上两级）
-Server_Dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-Temp_Dir="$Server_Dir/temp"
-Conf_Dir="$Server_Dir/conf"
-PID_FILE="$Temp_Dir/clash.pid"
+SERVER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+TEMP_DIR="$SERVER_DIR/temp"
+CONF_DIR="$SERVER_DIR/conf"
+PID_FILE="$TEMP_DIR/clash.pid"
 
-mkdir -p "$Temp_Dir"
+mkdir -p "$TEMP_DIR"
 
 # 1) 优先按 PID_FILE 停
 if [ -f "$PID_FILE" ]; then
@@ -27,36 +27,36 @@ if [ -f "$PID_FILE" ]; then
   fi
   rm -f "$PID_FILE"
 else
-  # 2) 兜底：按 "-d $Conf_Dir" 特征找（比 clash-linux- 更稳）
-  # 说明：你的 start.sh 启动命令形如：<clashbin> -d "$Conf_Dir"
-  PIDS="$(pgrep -f " -d ${Conf_Dir}(\s|$)" || true)"
+  # 2) 兜底：按 "-d $CONF_DIR" 特征找（比 clash-linux- 更稳）
+  # 说明：你的 start.sh 启动命令形如：<clashbin> -d "$CONF_DIR"
+  PIDS="$(pgrep -f " -d ${CONF_DIR}(\s|$)" || true)"
   if [ -n "${PIDS:-}" ]; then
     kill $PIDS 2>/dev/null || true
     for _ in {1..8}; do
       sleep 1
-      if ! pgrep -f " -d ${Conf_Dir}(\s|$)" >/dev/null 2>&1; then
+      if ! pgrep -f " -d ${CONF_DIR}(\s|$)" >/dev/null 2>&1; then
         break
       fi
     done
-    if pgrep -f " -d ${Conf_Dir}(\s|$)" >/dev/null 2>&1; then
+    if pgrep -f " -d ${CONF_DIR}(\s|$)" >/dev/null 2>&1; then
       kill -9 $PIDS 2>/dev/null || true
     fi
   fi
 fi
 
 # 3) 清理环境变量文件（删除，而不是置空）
-Env_File="${CLASH_ENV_FILE:-}"
-if [ "$Env_File" != "off" ] && [ "$Env_File" != "disabled" ]; then
-  if [ -z "$Env_File" ]; then
+ENV_FILE="${CLASH_ENV_FILE:-}"
+if [ "$ENV_FILE" != "off" ] && [ "$ENV_FILE" != "disabled" ]; then
+  if [ -z "$ENV_FILE" ]; then
     if [ -w /etc/profile.d ]; then
-      Env_File="/etc/profile.d/clash-for-linux.sh"
+      ENV_FILE="/etc/profile.d/clash-for-linux.sh"
     else
-      Env_File="$Temp_Dir/clash-for-linux.sh"
+      ENV_FILE="$TEMP_DIR/clash-for-linux.sh"
     fi
   fi
 
-  if [ -f "$Env_File" ]; then
-    rm -f "$Env_File" || true
+  if [ -f "$ENV_FILE" ]; then
+    rm -f "$ENV_FILE" || true
   fi
 fi
 

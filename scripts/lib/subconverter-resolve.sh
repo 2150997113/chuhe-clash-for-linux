@@ -12,15 +12,15 @@ set -euo pipefail
 # - 永不 exit 1（不可用就 Ready=false，主流程继续）
 # - 不阻塞 start.sh（快速启动，不等待健康检查）
 
-Server_Dir="${Server_Dir:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
-Temp_Dir="${Temp_Dir:-$Server_Dir/temp}"
+SERVER_DIR="${SERVER_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+TEMP_DIR="${TEMP_DIR:-$SERVER_DIR/temp}"
 
-mkdir -p "$Temp_Dir"
+mkdir -p "$TEMP_DIR"
 
-SC_DIR="$Server_Dir/libs/subconverter"
+SC_DIR="$SERVER_DIR/libs/subconverter"
 SC_LINK="$SC_DIR/subconverter"   # 稳定入口（最终用于启动/调用）
-Subconverter_Bin="$SC_LINK"
-Subconverter_Ready=false
+SUBCONVERTER_BIN="$SC_LINK"
+SUBCONVERTER_READY=false
 
 # 配置项（可放 .env）
 SUBCONVERTER_MODE="${SUBCONVERTER_MODE:-daemon}"     # daemon | off
@@ -32,7 +32,7 @@ SUBCONVERTER_URL="${SUBCONVERTER_URL:-http://${SUBCONVERTER_HOST}:${SUBCONVERTER
 SUBCONVERTER_PREF="${SUBCONVERTER_PREF:-$SC_DIR/pref.ini}"
 PREF_EXAMPLE_INI="$SC_DIR/pref.example.ini"
 
-PID_FILE="$Temp_Dir/subconverter.pid"
+PID_FILE="$TEMP_DIR/subconverter.pid"
 
 log()  { echo "[subc] $*"; }
 warn() { echo "[subc][WARN] $*" >&2; }
@@ -100,8 +100,8 @@ is_port_listening() {
 main() {
   # 0) 用户显式关闭
   if [ "$SUBCONVERTER_MODE" = "off" ]; then
-    Subconverter_Ready=false
-    export Subconverter_Bin Subconverter_Ready SUBCONVERTER_BIN SUBCONVERTER_READY SUBCONVERTER_URL
+    SUBCONVERTER_READY=false
+    export SUBCONVERTER_BIN SUBCONVERTER_READY SUBCONVERTER_BIN SUBCONVERTER_READY SUBCONVERTER_URL
     true
     return 0
   fi
@@ -113,16 +113,16 @@ main() {
 
   if [ "$os" = "unsupported" ]; then
     warn "Unsupported OS: $(uname -s). Skip subconverter."
-    Subconverter_Ready=false
-    export Subconverter_Bin Subconverter_Ready SUBCONVERTER_BIN SUBCONVERTER_READY SUBCONVERTER_URL
+    SUBCONVERTER_READY=false
+    export SUBCONVERTER_BIN SUBCONVERTER_READY SUBCONVERTER_BIN SUBCONVERTER_READY SUBCONVERTER_URL
     true
     return 0
   fi
 
   if [ "$arch" = "unknown" ]; then
     warn "Unsupported arch: $(uname -m). Skip subconverter."
-    Subconverter_Ready=false
-    export Subconverter_Bin Subconverter_Ready SUBCONVERTER_BIN SUBCONVERTER_READY SUBCONVERTER_URL
+    SUBCONVERTER_READY=false
+    export SUBCONVERTER_BIN SUBCONVERTER_READY SUBCONVERTER_BIN SUBCONVERTER_READY SUBCONVERTER_URL
     true
     return 0
   fi
@@ -130,8 +130,8 @@ main() {
   platform_bin="$(pick_platform_bin "$os" "$arch")"
   if [ -z "$platform_bin" ]; then
     warn "No subconverter binary found at: $SC_DIR/${os}-${arch}/subconverter"
-    Subconverter_Ready=false
-    export Subconverter_Bin Subconverter_Ready SUBCONVERTER_BIN SUBCONVERTER_READY SUBCONVERTER_URL
+    SUBCONVERTER_READY=false
+    export SUBCONVERTER_BIN SUBCONVERTER_READY SUBCONVERTER_BIN SUBCONVERTER_READY SUBCONVERTER_URL
     true
     return 0
   fi
@@ -139,25 +139,25 @@ main() {
   # 2) 生成稳定入口 libs/subconverter/subconverter
   if ! make_stable_link_or_copy "$platform_bin"; then
     warn "Failed to create stable entry: $SC_LINK"
-    Subconverter_Ready=false
-    export Subconverter_Bin Subconverter_Ready SUBCONVERTER_BIN SUBCONVERTER_READY SUBCONVERTER_URL
+    SUBCONVERTER_READY=false
+    export SUBCONVERTER_BIN SUBCONVERTER_READY SUBCONVERTER_BIN SUBCONVERTER_READY SUBCONVERTER_URL
     true
     return 0
   fi
 
-  Subconverter_Bin="$SC_LINK"
-  Subconverter_Ready=true
-  log "Resolved platform bin: ${os}-${arch} -> $Subconverter_Bin"
+  SUBCONVERTER_BIN="$SC_LINK"
+  SUBCONVERTER_READY=true
+  log "Resolved platform bin: ${os}-${arch} -> $SUBCONVERTER_BIN"
 
   # 3) pref.ini 生成（仅当准备启用 daemon）
-  if [ "$Subconverter_Ready" = "true" ] && [ "$SUBCONVERTER_MODE" = "daemon" ]; then
+  if [ "$SUBCONVERTER_READY" = "true" ] && [ "$SUBCONVERTER_MODE" = "daemon" ]; then
     if [ ! -f "$SUBCONVERTER_PREF" ] && [ -f "$PREF_EXAMPLE_INI" ]; then
       cp -f "$PREF_EXAMPLE_INI" "$SUBCONVERTER_PREF"
     fi
   fi
 
   # 4) daemon 启动（只在需要时）
-  if [ "$Subconverter_Ready" = "true" ] && [ "$SUBCONVERTER_MODE" = "daemon" ]; then
+  if [ "$SUBCONVERTER_READY" = "true" ] && [ "$SUBCONVERTER_MODE" = "daemon" ]; then
     # pid 存活则认为已启动
     if [ -f "$PID_FILE" ] && kill -0 "$(cat "$PID_FILE" 2>/dev/null)" 2>/dev/null; then
       :
@@ -169,7 +169,7 @@ main() {
         (
           cd "$SC_DIR"
           # 注意：subconverter 读取 base/rules/snippets 等目录，必须在其目录下启动更稳
-          nohup "$Subconverter_Bin" -f "$SUBCONVERTER_PREF" >/dev/null 2>&1 &
+          nohup "$SUBCONVERTER_BIN" -f "$SUBCONVERTER_PREF" >/dev/null 2>&1 &
           echo $! > "$PID_FILE"
         )
         # 给一点点启动时间（不要长等，避免阻塞）
@@ -179,10 +179,10 @@ main() {
   fi
 
   # 5) 统一导出（给后续脚本用）
-  export Subconverter_Bin
-  export Subconverter_Ready
-  export SUBCONVERTER_BIN="$Subconverter_Bin"
-  export SUBCONVERTER_READY="$Subconverter_Ready"
+  export SUBCONVERTER_BIN
+  export SUBCONVERTER_READY
+  export SUBCONVERTER_BIN="$SUBCONVERTER_BIN"
+  export SUBCONVERTER_READY="$SUBCONVERTER_READY"
   export SUBCONVERTER_URL
 
   # 永不失败

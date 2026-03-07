@@ -5,13 +5,13 @@
 set -euo pipefail
 
 # 获取项目根目录
-Server_Dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+SERVER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 # =========================
 # 加载公共库
 # =========================
 # shellcheck disable=SC1090
-source "$Server_Dir/scripts/lib/output.sh"
+source "$SERVER_DIR/scripts/lib/output.sh"
 output_init
 
 # =========================
@@ -19,7 +19,7 @@ output_init
 # =========================
 if [ "${1:-}" = "--update" ]; then
   info "更新订阅..."
-  bash "$Server_Dir/scripts/cmd/subscription-update.sh" || exit 1
+  bash "$SERVER_DIR/scripts/cmd/subscription-update.sh" || exit 1
 fi
 
 # =========================
@@ -27,11 +27,11 @@ fi
 # =========================
 info "停止服务..."
 
-if [ -f "$Server_Dir/scripts/cmd/service-stop.sh" ]; then
-  bash "$Server_Dir/scripts/cmd/service-stop.sh" || true
+if [ -f "$SERVER_DIR/scripts/cmd/service-stop.sh" ]; then
+  bash "$SERVER_DIR/scripts/cmd/service-stop.sh" || true
 else
   # 兜底：直接杀进程
-  PID_FILE="$Server_Dir/temp/clash.pid"
+  PID_FILE="$SERVER_DIR/temp/clash.pid"
   if [ -f "$PID_FILE" ]; then
     local pid
     pid="$(cat "$PID_FILE" 2>/dev/null || true)"
@@ -54,24 +54,24 @@ sleep 2
 # =========================
 info "启动服务..."
 
-if [ -f "$Server_Dir/scripts/cmd/service-start.sh" ]; then
-  bash "$Server_Dir/scripts/cmd/service-start.sh"
+if [ -f "$SERVER_DIR/scripts/cmd/service-start.sh" ]; then
+  bash "$SERVER_DIR/scripts/cmd/service-start.sh"
 else
   # 兜底：直接启动
-  Conf_Dir="$Server_Dir/conf"
-  Log_Dir="$Server_Dir/logs"
-  Temp_Dir="$Server_Dir/temp"
-  PID_FILE="$Temp_Dir/clash.pid"
+  CONF_DIR="$SERVER_DIR/conf"
+  LOG_DIR="$SERVER_DIR/logs"
+  TEMP_DIR="$SERVER_DIR/temp"
+  PID_FILE="$TEMP_DIR/clash.pid"
 
   # shellcheck disable=SC1090
-  source "$Server_Dir/scripts/lib/cpu-arch.sh"
+  source "$SERVER_DIR/scripts/lib/cpu-arch.sh"
   # shellcheck disable=SC1090
-  source "$Server_Dir/scripts/lib/clash-resolve.sh"
+  source "$SERVER_DIR/scripts/lib/clash-resolve.sh"
 
-  [ -z "${CpuArch:-}" ] && get_cpu_arch
-  Clash_Bin="$(resolve_clash_bin "$Server_Dir" "$CpuArch")"
+  [ -z "${CPU_ARCH:-}" ] && get_cpu_arch
+  Clash_Bin="$(resolve_clash_bin "$SERVER_DIR" "$CPU_ARCH")"
 
-  nohup "$Clash_Bin" -d "$Conf_Dir" >>"$Log_Dir/clash.log" 2>&1 &
+  nohup "$Clash_Bin" -d "$CONF_DIR" >>"$LOG_DIR/clash.log" 2>&1 &
   echo $! > "$PID_FILE"
 fi
 

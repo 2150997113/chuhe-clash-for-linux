@@ -35,7 +35,7 @@ upsert_yaml_kv() {
 # 强制写入 secret 到配置文件
 force_write_secret() {
   local file="$1"
-  local secret="${Secret:-}"
+  local secret="${SECRET:-}"
   [ -f "$file" ] || return 0
   [ -n "$secret" ] || return 0
 
@@ -50,22 +50,22 @@ force_write_secret() {
 force_write_controller_and_ui() {
   local file="$1"
   local controller="${EXTERNAL_CONTROLLER:-127.0.0.1:9090}"
-  local ui_src="${UI_SRC_DIR:-${Server_Dir}/dashboard/public}"
+  local ui_src="${UI_SRC_DIR:-${SERVER_DIR}/dashboard/public}"
 
   [ -n "$file" ] || return 1
 
   upsert_yaml_kv "$file" "external-controller" "$controller" || true
 
   if [ -d "$ui_src" ]; then
-    ln -sfn "$ui_src" "${Conf_Dir}/ui" 2>/dev/null || true
-    [ -e "${Conf_Dir}/ui" ] && upsert_yaml_kv "$file" "external-ui" "${Conf_Dir}/ui" || true
+    ln -sfn "$ui_src" "${CONF_DIR}/ui" 2>/dev/null || true
+    [ -e "${CONF_DIR}/ui" ] && upsert_yaml_kv "$file" "external-ui" "${CONF_DIR}/ui" || true
   fi
 }
 
 # 修复 external-ui 的 SAFE_PATH 问题
 fix_external_ui_safe_paths() {
   local bin="$1" cfg="$2" test_out="$3"
-  local ui_src="${UI_SRC_DIR:-${Server_Dir}/dashboard/public}"
+  local ui_src="${UI_SRC_DIR:-${SERVER_DIR}/dashboard/public}"
 
   [ -x "$bin" ] || return 0
   [ -s "$cfg" ] || return 0
@@ -146,7 +146,7 @@ apply_tun_config() {
 # 应用 Mixin 配置
 apply_mixin_config() {
   local config_path="$1"
-  local base_dir="${2:-${Server_Dir}}"
+  local base_dir="${2:-${SERVER_DIR}}"
   local mixin_dir="${CLASH_MIXIN_DIR:-$base_dir/conf/mixin.d}"
   local mixin_paths=()
 
