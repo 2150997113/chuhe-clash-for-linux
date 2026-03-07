@@ -60,4 +60,4 @@ if [ "$ENV_FILE" != "off" ] && [ "$ENV_FILE" != "disabled" ]; then
   fi
 fi
 
-echo -e "\n服务关闭成功。若当前终端已开启代理，请执行：proxy_off\n"
+echo -e "\n服务关闭成功。若当前终端已开启代理，请执行：proxy_down\n"

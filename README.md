@@ -165,7 +165,7 @@ proxy_on
 **关闭代理：**
 
 ```
-proxy_off
+proxy_down
 ```
 
 ## 🧰 常用管理命令
@@ -251,7 +251,7 @@ export CLASH_TUN_DNS_HIJACK='any:53'
 
 ```
 clashctl stop
-proxy_off
+proxy_down
 ```
 
 ------

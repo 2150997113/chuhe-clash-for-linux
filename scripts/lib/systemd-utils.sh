@@ -56,7 +56,7 @@ proxy_on() {
   echo "[OK] Proxy enabled: \$CLASH_HTTP_PROXY"
 }
 
-proxy_off() {
+proxy_down() {
   unset http_proxy https_proxy all_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY
   echo "[OK] Proxy disabled"
 }
@@ -69,7 +69,7 @@ proxy_status() {
 
 # 简化别名（带连字符）
 alias proxy-on='source /etc/profile.d/clash-for-linux.sh && proxy_on'
-alias proxy-down='source /etc/profile.d/clash-for-linux.sh && proxy_off'
+alias proxy-down='source /etc/profile.d/clash-for-linux.sh && proxy_down'
 EOF
 
   chmod 644 "$profiled_file"
