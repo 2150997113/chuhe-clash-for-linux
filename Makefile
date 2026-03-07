@@ -4,9 +4,9 @@
 SHELL := /bin/bash
 CMD := scripts/cmd
 
-.PHONY: install uninstall start stop down restart update status test env \
-        proxy-up proxy-down sub-add sub-list sub-use sub-del sub-update help \
-        use del add list
+# 允许任意参数作为目标（避免 make 报错）
+.PHONY: install uninstall start stop down restart update status test env help list
+.DEFAULT_GOAL := help
 
 # ==================== 服务生命周期 ====================
 
@@ -38,12 +38,6 @@ test:
 	curl -s --max-time 5 https://www.google.com -o /dev/null && \
 	echo "[OK] Google 可访问" || echo "[FAIL] 代理不可用"
 
-proxy-up:
-	@source /etc/profile.d/clash-for-linux.sh && proxy_on
-
-proxy-down:
-	@source /etc/profile.d/clash-for-linux.sh && proxy_down
-
 env:
 	@SERVER_DIR="$$(cd "$(dirname "$$0")" && pwd)"; \
 	if [ ! -f /etc/profile.d/clash-for-linux.sh ]; then \
@@ -60,57 +54,43 @@ env:
 	@echo "可用命令: proxy-on / proxy-down / proxy_on / proxy_down"
 
 # ==================== 订阅管理 ====================
-# 快捷命令: make use <name> | make del <name> | make add-<name> url=xxx
-# 完整命令: make sub-add [name= url=] | make sub-use [name=] | make sub-del [name=]
-
-# 快捷命令（推荐）
-use-%:
-	@./clashctl sub use "$*"
-
-del-%:
-	@./clashctl sub del "$*"
-
-add-%:
-	@if [ -z "$(url)" ]; then \
-		echo "[ERROR] 用法: make add-$* url=\"https://...\" [headers=\"...\"]"; \
-		exit 1; \
-	fi
-	@./clashctl sub add "$*" "$(url)" "$(headers:-)"
 
 list:
 	@./clashctl sub list
 
-# 完整命令（兼容）
-sub-add:
-	@if [ -n "${name}" ] && [ -n "${url}" ]; then \
-		./clashctl sub add "${name}" "${url}" "${headers:-}"; \
-	else \
-		read -p "订阅名称: " name; \
-		read -p "订阅地址: " url; \
-		./clashctl sub add "$$name" "$$url"; \
-	fi
+up:
+	@args="$(filter-out $@,$(MAKECMDGOALS))"; \
+	if [ -z "$$args" ] || echo "$$args" | grep -qE '^(up|down|proxy)$$'; then \
+		echo "[ERROR] 用法: make up <name>"; \
+		exit 1; \
+	fi; \
+	./clashctl sub use "$$args"
 
-sub-list:
-	@./clashctl sub list
+del:
+	@args="$(filter-out $@,$(MAKECMDGOALS))"; \
+	if [ -z "$$args" ] || echo "$$args" | grep -qE '^(up|down|proxy)$$'; then \
+		echo "[ERROR] 用法: make del <name>"; \
+		exit 1; \
+	fi; \
+	./clashctl sub del "$$args"
 
-sub-use:
-	@if [ -n "${name}" ]; then \
-		./clashctl sub use "${name}"; \
-	else \
-		read -p "订阅名称: " name; \
-		./clashctl sub use "$$name"; \
-	fi
+add:
+	@args="$(filter-out $@,$(MAKECMDGOALS))"; \
+	if [ -z "$$args" ] || [ -z "$(url)" ] || echo "$$args" | grep -qE '^(up|down|proxy)$$'; then \
+		echo "[ERROR] 用法: make add <name> url=xxx [headers=xxx]"; \
+		exit 1; \
+	fi; \
+	./clashctl sub add "$$args" "$(url)" "$(headers:-)"
 
-sub-del:
-	@if [ -n "${name}" ]; then \
-		./clashctl sub del "${name}"; \
-	else \
-		read -p "订阅名称: " name; \
-		./clashctl sub del "$$name"; \
-	fi
+proxy-up:
+	@source /etc/profile.d/clash-for-linux.sh && proxy_on
 
-sub-update:
-	@./clashctl sub update "${name:-}"
+proxy-down:
+	@source /etc/profile.d/clash-for-linux.sh && proxy_down
+
+# 防止 make 对参数报错
+%:
+	@:
 
 # ==================== 帮助 ====================
 
@@ -127,14 +107,16 @@ help:
 	@echo "  make status       查看状态"
 	@echo "  make test         测试代理连通性"
 	@echo ""
-	@echo "代理快捷命令 (m 命令):"
-	@echo "  m proxy up        开启代理"
-	@echo "  m proxy down      关闭代理"
+	@echo "代理快捷命令:"
+	@echo "  make proxy-up     开启代理"
+	@echo "  make proxy-down   关闭代理"
+	@echo "  m proxy up        开启代理 (wrapper)"
+	@echo "  m proxy down      关闭代理 (wrapper)"
 	@echo ""
-	@echo "订阅管理 (m 命令):"
-	@echo "  m list            列出订阅"
-	@echo "  m use <name>      切换订阅"
-	@echo "  m del <name>      删除订阅"
-	@echo "  m add <name> url=xxx  添加订阅"
+	@echo "订阅管理:"
+	@echo "  make list         列出订阅"
+	@echo "  make up <name>    切换订阅"
+	@echo "  make del <name>   删除订阅"
+	@echo "  make add <name> url=xxx  添加订阅"
 	@echo ""
 	@echo "详细命令: ./clashctl --help"
