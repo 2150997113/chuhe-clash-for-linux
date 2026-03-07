@@ -2,11 +2,6 @@
 
 **clash-for-linux** 是一个面向 Linux 服务器/桌面环境的 **Clash 自动化运行与管理脚本集**。
 项目基于 **Clash Meta / Mihomo 内核**，通过脚本方式实现 **开箱即用、可维护、可回滚** 的代理部署体验，适合用于提升服务器访问 GitHub、Docker Hub 等海外资源的速度。
-<p align="center">
-  <img src="docs/assets/1.png" width="30%">
-  <img src="docs/assets/2.png" width="30%">
-  <img src="docs/assets/3.png" width="30%">
-</p>
 
 本项目主要解决以下问题：
 - ✕ 官方 Clash 二进制下载、架构区分、配置部署繁琐
@@ -65,17 +60,17 @@ sudo make install
 - 检测并规避端口冲突
 - 安装 `clashctl` 到 `/usr/local/bin`
 
-### [架构设计文档](docs/architecture.md)
+### [架构设计文档](docs/1-architecture.md)
 
-### [多订阅管理设计](docs/subscription-management.md)
+### [多订阅管理设计](docs/2-subscription-management.md)
 
-### [Dashboard 设计文档](docs/dashboard-design.md)
+### [Dashboard 设计文档](docs/3-dashboard-design.md)
 
-### [Dashboard 状态获取机制](docs/dashboard-state-mechanism.md)
+### [Dashboard 状态获取机制](docs/4-dashboard-state-mechanism.md)
 
-### [Dashboard 部署方式](docs/dashboard-deployment.md)
+### [Dashboard 部署方式](docs/5-dashboard-deployment.md)
 
-### [故障排查指南](docs/troubleshooting.md)
+### [故障排查指南](docs/6-troubleshooting.md)
 
 ------
 
