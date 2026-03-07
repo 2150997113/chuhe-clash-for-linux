@@ -177,6 +177,10 @@ subscription_use() {
 	# 支持本地文件
 	if [[ "$url" == local:* ]]; then
 		local filepath="${url#local:}"
+		if [ ! -f "$filepath" ]; then
+			echo "[ERROR] 本地配置文件不存在: $filepath" >&2
+			exit 1
+		fi
 		local config_file="$CLASH_HOME/conf/config.yaml"
 		# 跳过相同文件
 		if [ "$(realpath "$filepath" 2>/dev/null)" != "$(realpath "$config_file" 2>/dev/null)" ]; then
