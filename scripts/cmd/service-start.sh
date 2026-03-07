@@ -200,9 +200,15 @@ URL="$(printf '%s' "$URL" | tr -d '\r' | sed -E 's/^[[:space:]]+//; s/[[:space:]
 export CLASH_URL="$URL"
 
 # URL 校验
+# 如果 CLASH_URL 为空，检查是否已有本地配置文件
 if [ -z "$URL" ] && [ "${SYSTEMD_MODE:-false}" != "true" ]; then
-  err "CLASH_URL 为空（未配置订阅地址）"
-  exit 2
+  if [ -f "$CONF_DIR/config.yaml" ]; then
+    info "CLASH_URL 为空，使用本地配置文件"
+    SKIP_CONFIG_REBUILD=true
+  else
+    err "CLASH_URL 为空（未配置订阅地址）"
+    exit 2
+  fi
 fi
 [ -n "$URL" ] && ! printf '%s' "$URL" | grep -Eq '^https?://' && {
   err "CLASH_URL 格式无效：必须以 http:// 或 https:// 开头"
@@ -243,7 +249,8 @@ unset http_proxy https_proxy no_proxy HTTP_PROXY HTTPS_PROXY NO_PROXY || true
 # =========================
 # systemd 兜底
 # =========================
-SKIP_CONFIG_REBUILD=false
+# 注意：SKIP_CONFIG_REBUILD 可能已在前面设置为 true（本地配置模式）
+SKIP_CONFIG_REBUILD="${SKIP_CONFIG_REBUILD:-false}"
 
 if [ "${SYSTEMD_MODE}" = "true" ] && [ -z "${URL:-}" ]; then
   warn "SYSTEMD_MODE=true 且 CLASH_URL 为空，跳过订阅更新"

@@ -182,9 +182,15 @@ subscription_use() {
 			exit 1
 		fi
 		local config_file="$CLASH_HOME/conf/config.yaml"
-		# 跳过相同文件
+		# 加载 .env 环境变量
+		if [ -f "$ENV_FILE" ]; then
+			set -a
+			source "$ENV_FILE"
+			set +a
+		fi
+		# 使用 envsubst 替换环境变量
 		if [ "$(realpath "$filepath" 2>/dev/null)" != "$(realpath "$config_file" 2>/dev/null)" ]; then
-			cp "$filepath" "$config_file"
+			envsubst < "$filepath" > "$config_file"
 		fi
 		set_env_var "CLASH_URL" ""
 		set_env_var "CLASH_HEADERS" ""
