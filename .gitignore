@@ -1,0 +1,15 @@
+# 项目文档
+docs/
+CLAUDE.md
+
+# 运行时目录
+logs/*.log
+temp/*.yaml
+temp/*.yml
+temp/*.txt
+temp/*.pid
+
+# volumes 用户数据
+volumes/geoip/*.mmdb
+volumes/mixin.d/*.yaml
+volumes/mixin.d/*.yml
