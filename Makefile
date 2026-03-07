@@ -5,7 +5,7 @@ SHELL := /bin/bash
 CMD := scripts/cmd
 
 .PHONY: install uninstall start stop down restart update status test env \
-        proxy-up proxy-down sub-add sub-list sub-use sub-update help
+        proxy-up proxy-down sub-add sub-list sub-use sub-del sub-update help
 
 # ==================== 服务生命周期 ====================
 
@@ -59,21 +59,39 @@ env:
 	@echo "可用命令: proxy-on / proxy-down / proxy_on / proxy_down"
 
 # ==================== 订阅管理 ====================
+# 支持环境变量: make sub-add name=xxx url=xxx [headers=xxx]
+# 支持环境变量: make sub-use name=xxx
 
 sub-add:
-	@read -p "订阅名称: " name; \
-	read -p "订阅地址: " url; \
-	./clashctl sub add "$$name" "$$url"
+	@if [ -n "${name}" ] && [ -n "${url}" ]; then \
+		./clashctl sub add "${name}" "${url}" "${headers:-}"; \
+	else \
+		read -p "订阅名称: " name; \
+		read -p "订阅地址: " url; \
+		./clashctl sub add "$$name" "$$url"; \
+	fi
 
 sub-list:
 	@./clashctl sub list
 
 sub-use:
-	@read -p "订阅名称: " name; \
-	./clashctl sub use "$$name"
+	@if [ -n "${name}" ]; then \
+		./clashctl sub use "${name}"; \
+	else \
+		read -p "订阅名称: " name; \
+		./clashctl sub use "$$name"; \
+	fi
+
+sub-del:
+	@if [ -n "${name}" ]; then \
+		./clashctl sub del "${name}"; \
+	else \
+		read -p "订阅名称: " name; \
+		./clashctl sub del "$$name"; \
+	fi
 
 sub-update:
-	@./clashctl sub update
+	@./clashctl sub update "${name:-}"
 
 # ==================== 帮助 ====================
 
@@ -95,9 +113,10 @@ help:
 	@echo "  make proxy-down   关闭代理 (等效 proxy-down)"
 	@echo ""
 	@echo "订阅管理:"
-	@echo "  make sub-add      添加订阅"
-	@echo "  make sub-list     列出订阅"
-	@echo "  make sub-use      切换订阅"
-	@echo "  make sub-update   更新订阅"
+	@echo "  make sub-add [name=xxx url=xxx headers=xxx]  添加订阅"
+	@echo "  make sub-list                                列出订阅"
+	@echo "  make sub-use [name=xxx]                      切换订阅"
+	@echo "  make sub-del [name=xxx]                      删除订阅"
+	@echo "  make sub-update [name=xxx]                   更新订阅"
 	@echo ""
 	@echo "详细命令: ./clashctl --help"
