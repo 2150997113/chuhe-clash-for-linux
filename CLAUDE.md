@@ -10,14 +10,14 @@ clash-for-linux is a Bash-based automation toolkit for deploying and managing Cl
 
 ```bash
 # Installation
-sudo make install
+sudo just install
 
-# Service management (via clashctl or make)
-make start
-make stop
-make restart
-make status
-make update              # Refresh subscription
+# Service management
+just start
+just stop
+just restart
+just status
+just update              # Refresh subscription
 
 # Or using clashctl
 clashctl start
@@ -27,18 +27,29 @@ clashctl status
 clashctl update
 
 # Multi-subscription management
+just list                        # List subscriptions
+just use <name>                  # Switch subscription
+just add <name> <url> [headers]  # Add subscription
+just del <name>                  # Delete subscription
+just sub-update [name]           # Update subscription
+
+# Or using clashctl
 clashctl sub add <name> <url> [headers]
 clashctl sub del <name>
 clashctl sub use <name>
 clashctl sub update [name]
 clashctl sub list
 
-# System proxy helpers (after source /etc/profile.d/clash-for-linux.sh)
+# System proxy
+just proxy up                    # Enable proxy
+just proxy down                  # Disable proxy
+
+# Or after source /etc/profile.d/clash-for-linux.sh
 proxy_on
 proxy_down
 
 # Uninstall
-sudo make uninstall
+sudo just uninstall
 ```
 
 ## Architecture
@@ -79,7 +90,7 @@ clash-for-linux/
 ├── docs/                         # 文档
 │
 ├── .env
-├── Makefile                      # 命令入口
+├── justfile                      # 命令入口 (just)
 ├── clashctl                      # CLI 工具
 ├── CLAUDE.md
 └── README.md
@@ -233,7 +244,7 @@ When `clashctl sub use <name>` is called, it updates `.env` with `CLASH_URL`, `C
 | File | Reason |
 |------|--------|
 | `scripts/**/*.sh` | All shell scripts |
-| `Makefile` | Build commands |
+| `justfile` | Task runner commands |
 | `.gitignore` | Ignore rules |
 | `README.md` | Documentation |
 | `libs/clash/*` | Clash kernel binaries |

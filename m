@@ -1,3 +1,5 @@
+
+
 #!/bin/bash
 # clash-for-linux 命令 wrapper
 # 支持: m up <name>, m del <name>, m add <name> url=xxx, m list

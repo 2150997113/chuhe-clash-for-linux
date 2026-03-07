@@ -38,7 +38,7 @@ source "$INSTALL_DIR/scripts/lib/port-check.sh"
 # 前置校验
 # =========================
 if [ "$(id -u)" -ne 0 ]; then
-  err "需要 root 权限执行安装脚本（请使用 sudo make install）"
+  err "需要 root 权限执行安装脚本（请使用 sudo just install）"
   exit 1
 fi
 
@@ -202,8 +202,8 @@ if [ "$Systemd_Usable" = "true" ]; then
   log "🟢 服务状态：${ss_colored}"
   log ""
   log "${C_BOLD}常用命令：${C_NC}"
-  log "  $(cmd "make status")"
-  log "  $(cmd "sudo make restart")"
+  log "  $(cmd "just status")"
+  log "  $(cmd "sudo just restart")"
 else
   warn "当前环境未启用 systemd，请使用 clashctl 管理进程"
   log "  $(cmd "sudo clashctl start")"
@@ -226,9 +226,7 @@ dash="http://${api_host}:${api_port}/ui"
 log "🌐 Dashboard：$(url "$dash")"
 
 if [[ -n "$SECRET_VAL" ]]; then
-  MASKED="${SECRET_VAL:0:4}****${SECRET_VAL: -4}"
-  log "🔐 SECRET：${C_YELLOW}${MASKED}${C_NC}"
-  log "   查看完整 SECRET：$(cmd "sudo sed -nE 's/^[[:space:]]*secret:[[:space:]]*//p' \"$CONF_FILE\" | head -n 1")"
+  log "🔐 SECRET：${C_YELLOW}${SECRET_VAL}${C_NC}"
 else
   log "🔐 SECRET：${C_YELLOW}启动中暂未读到（稍后再试）${C_NC}"
 fi
@@ -244,7 +242,7 @@ else
   log "  $(cmd "sudo bash -c 'echo \"CLASH_URL=<订阅地址>\" >> ${INSTALL_DIR}/.env'")"
   log ""
   log "配置完成后重启服务："
-  [ "$Systemd_Usable" = "true" ] && log "  $(cmd "sudo make restart")" || log "  $(cmd "sudo clashctl restart")"
+  [ "$Systemd_Usable" = "true" ] && log "  $(cmd "sudo just restart")" || log "  $(cmd "sudo clashctl restart")"
 fi
 
 # 下一步

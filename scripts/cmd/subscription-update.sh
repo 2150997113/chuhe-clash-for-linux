@@ -224,5 +224,5 @@ force_write_secret "$CONF_DIR/config.yaml"
 
 ok "订阅更新完成"
 echo ""
-echo "如需生效请执行: make restart 或 bash scripts/cmd/service-restart.sh"
+echo "如需生效请执行: just restart 或 bash scripts/cmd/service-restart.sh"
 echo ""

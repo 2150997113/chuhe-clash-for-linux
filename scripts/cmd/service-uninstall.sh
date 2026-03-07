@@ -20,7 +20,7 @@ output_init
 # 权限检查
 # =========================
 if [ "$(id -u)" -ne 0 ]; then
-  err "需要 root 权限执行卸载脚本（请使用 sudo make uninstall）"
+  err "需要 root 权限执行卸载脚本（请使用 sudo just uninstall）"
   exit 1
 fi
 
