@@ -235,3 +235,7 @@ When `clashctl sub use <name>` is called, it updates `.env` with `CLASH_URL`, `C
 | `libs/clash/*` | Clash kernel binaries |
 | `libs/subconverter/linux-*/*` | Subconverter binaries by architecture |
 | `conf/fallback_config.yaml` | Fallback configuration template |
+
+### Release Notes Guidelines
+
+- Do NOT include AI attribution identifiers such as "Generated with Claude Code" or similar markers in release notes, commit messages, or any project documentation.
