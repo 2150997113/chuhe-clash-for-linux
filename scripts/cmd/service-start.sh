@@ -302,12 +302,8 @@ if [ "$SKIP_CONFIG_REBUILD" != "true" ]; then
       info "订阅已是完整 Clash 配置"
       cp -f "$TEMP_DIR/clash.yaml" "$CONF_DIR/config.yaml"
 
-      # 写入 controller/ui/secret
-      force_write_controller_and_ui "$CONF_DIR/config.yaml" || true
+      # 写入 secret
       force_write_secret "$CONF_DIR/config.yaml" || true
-
-      # 创建 UI 软链
-      [ -d "$SERVER_DIR/dashboard/public" ] && ln -sfn "$SERVER_DIR/dashboard/public" "$CONF_DIR/ui" 2>/dev/null || true
 
       SKIP_CONFIG_REBUILD=true
     else
@@ -329,7 +325,6 @@ if [ "$SKIP_CONFIG_REBUILD" != "true" ]; then
         cp -f "$TEMP_DIR/clash.yaml" "$CONF_DIR/config.yaml"
       fi
 
-      force_write_controller_and_ui "$CONF_DIR/config.yaml" || true
       force_write_secret "$CONF_DIR/config.yaml" || true
     fi
   else
@@ -374,7 +369,7 @@ fi
 # =========================
 echo ""
 if [ "${EXTERNAL_CONTROLLER_ENABLED:-true}" = "true" ]; then
-  echo "Clash Dashboard: http://${EXTERNAL_CONTROLLER}/ui"
+  echo "External Controller: http://${EXTERNAL_CONTROLLER}"
   masked="${SECRET:0:4}****${SECRET: -4}"
   echo "SECRET: ${masked}"
 else

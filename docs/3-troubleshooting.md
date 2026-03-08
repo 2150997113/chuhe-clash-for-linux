@@ -98,12 +98,12 @@ lsof -i :7890
 
 ---
 
-## 2. Dashboard 问题
+## 2. API 问题
 
-### 2.1 Dashboard 无法访问
+### 2.1 External Controller 无法访问
 
 **症状**：
-- 浏览器访问 `http://127.0.0.1:9090/ui` 无响应
+- API 请求无响应
 - 显示 404 或 502 错误
 
 **排查步骤**：
@@ -117,9 +117,6 @@ systemctl status clash-for-linux
 
 # 检查端口监听
 ss -tlnp | grep 9090
-
-# 检查 UI 软链接
-ls -la /opt/clash-for-linux/conf/ui
 ```
 
 **常见原因**：
@@ -128,33 +125,10 @@ ls -la /opt/clash-for-linux/conf/ui
 |------|----------|
 | 服务未运行 | `make start` 启动服务 |
 | external-controller 配置错误 | 检查 `conf/config.yaml` |
-| UI 软链接丢失 | 重新执行 `make start` |
 
-### 2.2 SAFE_PATHS 错误
-
-**症状**：
-```
-level=error msg="path is not subpath of home directory or SAFE_PATHS"
-```
-
-**原因**：Mihomo 内核安全限制，`external-ui` 路径不在允许目录
-
-**解决方案**：
-
-1. 确保 `SAFE_PATHS` 环境变量包含项目目录：
-   ```bash
-   export SAFE_PATHS=/opt/clash-for-linux:/root/.config/mihomo
-   ```
-
-2. 检查启动脚本是否设置：
-   ```bash
-   grep SAFE_PATHS /opt/clash-for-linux/scripts/cmd/service-start.sh
-   ```
-
-### 2.3 认证失败 (403 Forbidden)
+### 2.2 认证失败 (403 Forbidden)
 
 **症状**：
-- Dashboard 显示认证失败
 - API 请求返回 403
 
 **排查步骤**：

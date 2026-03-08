@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-clash-for-linux is a Bash-based automation toolkit for deploying and managing Clash/Mihomo proxy on Linux servers. It provides systemd service integration, multi-subscription management, and a pre-configured Dashboard (MetaCubeXD).
+clash-for-linux is a Bash-based automation toolkit for deploying and managing Clash/Mihomo proxy on Linux servers. It provides systemd service integration and multi-subscription management.
 
 ## Common Commands
 
@@ -86,7 +86,6 @@ clash-for-linux/
 │       └── setup-systemd.sh
 │
 ├── conf/                         # 配置目录
-├── dashboard/                    # Dashboard
 ├── docs/                         # 文档
 │
 ├── .env
@@ -110,9 +109,6 @@ clash-for-linux/
 │       └── scripts/lib/profile_conversion.sh                    │
 │                                                                 │
 │       └── conf/subscriptions.list (multi-subscription storage) │
-│                                                                 │
-│  Dashboard: dashboard/public/ (Nuxt.js pre-compiled static)     │
-│  Served by Clash's built-in HTTP server at /ui/*               │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -131,15 +127,14 @@ clash-for-linux/
 1. `scripts/cmd/start-service.sh` loads `.env` and detects CPU architecture
 2. Downloads subscription from `CLASH_URL`
 3. Converts non-Clash YAML via subconverter (if needed)
-4. Injects `external-controller`, `external-ui`, `secret` into config
+4. Injects `external-controller`, `secret` into config
 5. Applies Mixin overlays from `conf/mixin.d/`
-6. Creates symlink: `conf/ui -> dashboard/public/`
-7. Starts Clash kernel from `libs/clash/`
+6. Starts Clash kernel from `libs/clash/`
 
 ### Configuration Hierarchy
 
 ```
-Subscription config < Mixin configs < Runtime injection (controller/ui/secret)
+Subscription config < Mixin configs < Runtime injection (controller/secret)
 ```
 
 ### systemd Integration
@@ -188,14 +183,6 @@ echo -e "\033[31m[ERROR]\033[0m message" >&2
 echo -e "\033[32m[OK]\033[0m message"
 ```
 
-## Dashboard
-
-- **Type**: MetaCubeXD (pre-compiled Nuxt.js static files)
-- **Access**: `http://127.0.0.1:9090/ui`
-- **Authentication**: Secret via `Authorization: Bearer <secret>` header
-- **API**: Clash RESTful API at `/api/*`, WebSocket at `/logs`, `/traffic`, `/connections`
-- **No separate web server needed** - Clash kernel serves static files
-
 ## Multi-Subscription Data Format
 
 ```
@@ -212,7 +199,6 @@ When `clashctl sub use <name>` is called, it updates `.env` with `CLASH_URL`, `C
 - `external-controller` binds to `127.0.0.1:9090` only
 - `secret` auto-generated if not specified (64-char hex)
 - TLS verification enabled by default
-- Recommend SSH port forwarding for Dashboard access
 
 ## Installation
 
@@ -231,7 +217,6 @@ When `clashctl sub use <name>` is called, it updates `.env` with `CLASH_URL`, `C
 | `conf/config.yaml` | Runtime configuration, auto-generated from subscription |
 | `conf/GeoSite.dat` | Geosite database, downloaded at runtime |
 | `conf/cache.db` | Clash cache database |
-| `conf/ui` | Symlink to dashboard, created at runtime |
 | `libs/subconverter/pref.ini` | Subconverter config, generated at runtime |
 | `libs/subconverter/subconverter` | Symlink to architecture-specific binary |
 | `volumes/geoip/*.mmdb` | User's GeoIP database |
@@ -249,5 +234,4 @@ When `clashctl sub use <name>` is called, it updates `.env` with `CLASH_URL`, `C
 | `README.md` | Documentation |
 | `libs/clash/*` | Clash kernel binaries |
 | `libs/subconverter/linux-*/*` | Subconverter binaries by architecture |
-| `dashboard/public/*` | Dashboard static files |
 | `conf/fallback_config.yaml` | Fallback configuration template |

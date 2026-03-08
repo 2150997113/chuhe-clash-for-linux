@@ -46,63 +46,6 @@ force_write_secret() {
   fi
 }
 
-# 强制写入 external-controller 和 external-ui
-force_write_controller_and_ui() {
-  local file="$1"
-  local controller="${EXTERNAL_CONTROLLER:-127.0.0.1:9090}"
-  local ui_src="${UI_SRC_DIR:-${SERVER_DIR}/dashboard/public}"
-
-  [ -n "$file" ] || return 1
-
-  upsert_yaml_kv "$file" "external-controller" "$controller" || true
-
-  if [ -d "$ui_src" ]; then
-    ln -sfn "$ui_src" "${CONF_DIR}/ui" 2>/dev/null || true
-    [ -e "${CONF_DIR}/ui" ] && upsert_yaml_kv "$file" "external-ui" "${CONF_DIR}/ui" || true
-  fi
-}
-
-# 修复 external-ui 的 SAFE_PATH 问题
-fix_external_ui_safe_paths() {
-  local bin="$1" cfg="$2" test_out="$3"
-  local ui_src="${UI_SRC_DIR:-${SERVER_DIR}/dashboard/public}"
-
-  [ -x "$bin" ] || return 0
-  [ -s "$cfg" ] || return 0
-
-  # 先跑一次 test
-  "$bin" -t -f "$cfg" >"$test_out" 2>&1
-  local rc=$?
-  [ $rc -eq 0 ] && return 0
-
-  # 只处理 SAFE_PATH 报错
-  grep -q "SAFE_PATH" "$test_out" || return $rc
-  grep -q "external-ui" "$cfg" 2>/dev/null || grep -q "external-ui" "$test_out" || return $rc
-
-  # 抽取 allowed paths 的第一个 base
-  local base
-  base="$(sed -n 's/.*allowed paths: \[\([^]]*\)\].*/\1/p' "$test_out" | head -n 1)"
-  [ -n "$base" ] || return $rc
-
-  # 同步 UI 到 allowed base 的子目录
-  local ui_dst="$base/ui"
-  mkdir -p "$ui_dst" 2>/dev/null || true
-
-  if [ -d "$ui_src" ]; then
-    if command -v rsync >/dev/null 2>&1; then
-      rsync -a --delete "$ui_src"/ "$ui_dst"/ 2>/dev/null || true
-    else
-      rm -rf "$ui_dst"/* 2>/dev/null || true
-      cp -a "$ui_src"/. "$ui_dst"/ 2>/dev/null || true
-    fi
-  fi
-
-  upsert_yaml_kv "$cfg" "external-ui" "$ui_dst" || true
-
-  "$bin" -t -f "$cfg" >"$test_out" 2>&1
-  return $?
-}
-
 # =========================
 # 配置生成
 # =========================

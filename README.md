@@ -16,7 +16,7 @@
 - 🔧 **systemd 服务管理**，支持 start / stop / restart / enable
 - 🗂️ **清晰的目录结构**，配置、日志、二进制、mixin 分离，便于维护与回滚
 - 🔐 **安全默认配置**
-  - 管理面板默认仅绑定 `127.0.0.1`
+  - External Controller 默认仅绑定 `127.0.0.1`
   - 自动生成或自定义 Secret
   - 默认开启 TLS 校验
 - 🧪 **端口自动检测与分配**，避免冲突
@@ -83,13 +83,9 @@ sudo make install
 
 ### [多订阅管理设计](docs/2-subscription-management.md)
 
-### [Dashboard 设计文档](docs/3-dashboard-design.md)
+### [故障排查指南](docs/3-troubleshooting.md)
 
-### [Dashboard 状态获取机制](docs/4-dashboard-state-mechanism.md)
-
-### [Dashboard 部署方式](docs/5-dashboard-deployment.md)
-
-### [故障排查指南](docs/6-troubleshooting.md)
+### [路由配置](docs/4-routing-configuration.md)
 
 ------
 
@@ -114,51 +110,6 @@ sudo make restart
 - `CLASH_SECRET` 为空时将自动生成
 - 端口支持设置为 `auto`，自动检测并分配
 - 其它架构可通过 `CLASH_BIN` 指定二进制路径，或命名为 `clash-linux-<arch>`
-
-------
-
-## 🌐 打开 Clash 管理面板（推荐）
-
-出于安全考虑，管理接口默认 **仅监听服务器本机**：
-
-```
-127.0.0.1:9090
-```
-
-如需在 **本地浏览器** 中访问服务器上的管理面板，
- 请使用 SSH 端口转发（本地终端）：
-
-```
-ssh -N -L 9090:127.0.0.1:9090 root@<服务器IP>
-```
-
-然后在浏览器中访问：
-
-```
-http://127.0.0.1:9090/ui
-```
-
-> 不建议直接将管理端口暴露到公网。
-
-如果想要**公网访问**
-编辑 `.env` 文件，设置公网访问（对外端口不用改，改了机器人也能扫到，密钥设置的长点就行）：
-
-```
-sudo bash -c 'echo "EXTERNAL_CONTROLLER=0.0.0.0:9090" >> .env'
-```
-
-配置完成后，**重启服务使配置生效**：
-
-```
-sudo make restart
-```
-
-密钥留空时：脚本可自动生成随机值
-获取密钥命令：
-```
-sudo sed -nE 's/^[[:space:]]*secret:[[:space:]]*//p' "conf/config.yaml" | head -n 1
-```
-
 
 ------
 
@@ -296,7 +247,7 @@ sudo make uninstall
 
 ## 📝 说明
 
-- 管理面板默认绑定 `127.0.0.1:9090`
+- External Controller 默认绑定 `127.0.0.1:9090`
 - 如需对外访问，请自行配置并确保 `CLASH_SECRET` 足够复杂
 - 默认启用 TLS 校验，不推荐关闭
 

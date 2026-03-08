@@ -1,0 +1,12 @@
+# 20260308
+
+## 功能
+- 多订阅管理 (clashctl sub add/list/use/del)
+- 本地配置文件支持 (local:./config.yaml)
+- systemd 服务管理 (start/stop/restart/status)
+- 系统代理开关 (proxy_on/proxy_down)
+- Mixin 配置覆盖
+- Tun 模式支持
+- 多架构支持 (amd64/arm64/armv7)
+## 协议
+VMess / VLESS / SS / SSR / Trojan / Hysteria / TUIC / HTTP / SOCKS5

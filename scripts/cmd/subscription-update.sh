@@ -213,12 +213,6 @@ fi
 # 写入最终配置
 cp "$TEMP_DIR/config.yaml" "$CONF_DIR/config.yaml"
 
-# Dashboard
-if [ "$EXTERNAL_CONTROLLER_ENABLED" = "true" ]; then
-  dashboard_dir="$SERVER_DIR/dashboard/public"
-  [ -d "$dashboard_dir" ] && upsert_yaml_kv "$CONF_DIR/config.yaml" "external-ui" "$dashboard_dir"
-fi
-
 # 写入 secret
 force_write_secret "$CONF_DIR/config.yaml"
 

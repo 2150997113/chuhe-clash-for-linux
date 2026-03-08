@@ -210,8 +210,8 @@ else
   log "  $(cmd "sudo clashctl restart")"
 fi
 
-# Dashboard
-section "控制面板"
+# External Controller
+section "控制接口"
 api_port="${EXTERNAL_CONTROLLER##*:}"
 api_host="${EXTERNAL_CONTROLLER%:*}"
 [[ -z "$api_host" || "$api_host" == "$EXTERNAL_CONTROLLER" ]] && api_host="127.0.0.1"
@@ -222,8 +222,8 @@ if wait_secret_ready "$CONF_FILE" 6; then
   SECRET_VAL="$(read_secret_from_config "$CONF_FILE" || true)"
 fi
 
-dash="http://${api_host}:${api_port}/ui"
-log "🌐 Dashboard：$(url "$dash")"
+api_url="http://${api_host}:${api_port}"
+log "🌐 API：$(url "$api_url")"
 
 if [[ -n "$SECRET_VAL" ]]; then
   log "🔐 SECRET：${C_YELLOW}${SECRET_VAL}${C_NC}"
