@@ -27,6 +27,24 @@ fi
 info "开始卸载 ${SERVICE_NAME} ..."
 
 # =========================
+# 0) 关闭系统代理
+# =========================
+info "关闭系统代理..."
+
+# 尝试调用已安装的 proxy_down 函数
+if [ -f "/etc/profile.d/clash-for-linux.sh" ]; then
+  source "/etc/profile.d/clash-for-linux.sh" 2>/dev/null || true
+  if type proxy_down >/dev/null 2>&1; then
+    proxy_down 2>/dev/null || true
+  fi
+fi
+
+# 兜底：直接清除代理环境变量
+unset http_proxy https_proxy all_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY no_proxy NO_PROXY 2>/dev/null || true
+
+ok "已关闭系统代理"
+
+# =========================
 # 1) 停止服务
 # =========================
 if [ -f "${INSTALL_DIR}/scripts/cmd/service-stop.sh" ]; then
@@ -44,7 +62,6 @@ fi
 # 兜底：按 PID 文件停止
 PID_FILE="${INSTALL_DIR}/temp/clash.pid"
 if [ -f "$PID_FILE" ]; then
-  local pid
   pid="$(cat "$PID_FILE" 2>/dev/null || true)"
   if [ -n "${pid:-}" ] && kill -0 "$pid" 2>/dev/null; then
     kill "$pid" 2>/dev/null || true
@@ -96,10 +113,6 @@ fi
 # =========================
 info "项目目录保留: ${INSTALL_DIR}"
 info "如需完全删除，请手动执行: rm -rf ${INSTALL_DIR}"
-
-echo
-warn "如果你曾执行 proxy_on，当前终端可能仍保留代理环境变量。可执行："
-echo "  unset http_proxy https_proxy no_proxy HTTP_PROXY HTTPS_PROXY NO_PROXY"
 
 echo
 ok "卸载完成 ✅"

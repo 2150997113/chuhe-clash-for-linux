@@ -119,6 +119,14 @@ ensure_subconverter() {
   local bin="${SERVER_DIR}/libs/subconverter/subconverter"
   local port="25500"
 
+  # 如果符号链接不存在，尝试创建
+  if [ ! -x "$bin" ]; then
+    local resolve_script="${SERVER_DIR}/scripts/lib/subconverter-resolve.sh"
+    if [ -f "$resolve_script" ]; then
+      source "$resolve_script" 2>/dev/null || true
+    fi
+  fi
+
   [ ! -x "$bin" ] && { export SUBCONVERTER_READY="false"; return 0; }
 
   # 已在监听
