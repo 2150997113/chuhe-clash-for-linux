@@ -17,6 +17,10 @@ check:
 install:
     sudo bash {{CMD}}/service-install.sh
 
+# 卸载服务
+uninstall:
+    sudo bash {{CMD}}/service-uninstall.sh
+
 # Clash 服务控制: just clash up / just clash down
 clash action:
     #!/usr/bin/env bash
