@@ -187,7 +187,6 @@ install_profiled "$INSTALL_DIR" "$CLASH_HTTP_PORT" "$CLASH_SOCKS_PORT" || true
 # 安装完成输出
 # =========================
 section "安装完成"
-ok "Clash for Linux 已安装至: $(path "${INSTALL_DIR}")"
 log "📦 安装目录：$(path "${INSTALL_DIR}")"
 log "👤 运行用户：${SERVICE_USER}:${SERVICE_GROUP}"
 log "🔧 服务名称：${SERVICE_NAME}.service"
@@ -250,8 +249,7 @@ section "下一步（可选）"
 PROFILED_FILE="/etc/profile.d/clash-for-linux.sh"
 if [ -f "$PROFILED_FILE" ]; then
   log "开启终端代理："
-  log "  $(cmd "source $PROFILED_FILE")"
-  log "  $(cmd "proxy_on")"
+  log "  $(cmd "source $PROFILED_FILE && proxy_on")"
 fi
 
 # 启动诊断

@@ -61,7 +61,3 @@ EOF
 #################### 刷新 systemd ####################
 
 systemctl daemon-reload
-
-echo -e "\033[32m[OK] 已生成 systemd 单元: ${Unit_Path}\033[0m"
-echo -e "可执行以下命令启动服务："
-echo -e "  sudo systemctl enable --now ${SERVICE_NAME}.service"
