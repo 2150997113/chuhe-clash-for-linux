@@ -165,7 +165,7 @@ subscription_use() {
 	fi
 	ensure_subscription_file
 	local line
-	line=$(subscription_lookup "$name")
+	line=$(subscription_lookup "$name") || true
 	if [ -z "$line" ]; then
 		echo "[ERROR] 未找到订阅: $name" >&2
 		exit 1
@@ -232,7 +232,7 @@ subscription_update() {
 	# 检查是否是本地订阅
 	ensure_subscription_file
 	local line url
-	line=$(subscription_lookup "$name")
+	line=$(subscription_lookup "$name") || true
 	if [ -z "$line" ]; then
 		echo "[ERROR] 未找到订阅: $name" >&2
 		exit 1
