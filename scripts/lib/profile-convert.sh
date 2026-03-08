@@ -24,7 +24,8 @@ IN_FILE="${IN_FILE:-$TEMP_DIR/clash.yaml}"
 OUT_FILE="${OUT_FILE:-$TEMP_DIR/clash_config.yaml}"
 
 # "更先进"的默认：Clash Meta / Mihomo
-SUB_TARGET="${SUB_TARGET:-clashmeta}"   # 推荐 clashmeta（兼容面最广）
+# 注意：subconverter v0.9.0 只支持 clash, 不支持 clashmeta
+SUB_TARGET="${SUB_TARGET:-clash}"   # clash 兼容 Mihomo
 SUB_URL="${CLASH_URL:-}"               # 原始订阅 URL（.env 里 export CLASH_URL=...）
 
 # 0) 输入不存在就跳过
